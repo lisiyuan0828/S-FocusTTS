@@ -1,0 +1,494 @@
+/* ---- 基础：透明全屏、禁止文字选择 ---- */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent !important;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+/* ---- 球容器：整屏撑开但完全穿透，不接收任何鼠标事件 ---- */
+.orb {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* 窗口边缘全透明穿透，不会意外挡住底下应用的点击 */
+  gap: 4px;
+}
+
+/* ---- 命中区：圆形按钮，位于窗口正中；只有它接收鼠标事件 ---- */
+.orb-hit {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto; /* 只有这个圆形区域可点 */
+  cursor: grab; /* 暗示可拖动；单击时也会触发停录 */
+  /* 让 hover 有一点点视觉反馈；M5.3：尺寸切换时加平滑过渡 */
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    width 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.orb-hit:hover {
+  transform: scale(1.04);
+  filter: brightness(1.08);
+}
+.orb-hit:active {
+  transform: scale(0.96);
+  cursor: grabbing;
+  filter: brightness(1.15) saturate(1.1);
+}
+
+/* ---- 粒子画布：整个命中区铺满，承载 Three.js 渲染的 3D 粒子系统 ----
+   M6（DEC-004）：球核不再是 CSS radial-gradient，而是 WebGL 粒子。
+   canvas 本身不接收事件（pointer-events:none），事件走外层 .orb-hit。
+*/
+.orb__canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  /* v9（2026-05-09）：呼吸动画已移除。整球不再做 scale 缩放，
+     观感由粒子系统内部的布朗运动承担，球体形状静止稳定。 */
+  transform-origin: center center;
+}
+
+/* ---- 外圈光环：轻微扩散（录音时加速） ---- */
+.orb__ring {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid rgba(74, 168, 255, 0.35);
+  animation: ring 2.6s ease-out infinite;
+  pointer-events: none;
+}
+
+/* ---- 转写中的 spinner（一条圆弧绕着转）---- */
+.orb__spinner {
+  position: absolute;
+  width: 106px;
+  height: 106px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.9);
+  border-right-color: rgba(142, 214, 255, 0.7);
+  opacity: 0;
+  animation: spin 1s linear infinite;
+  pointer-events: none;
+}
+
+/* ============================================================
+   状态机：.orb[data-state="xxx"] 控制不同阶段的外观
+   idle        → 静态（只有微弱呼吸）
+   recording   → 明显呼吸 + 外环扩散
+   transcribing→ 球变青紫 + spinner 可见
+   injecting   → 球短闪绿色
+   error       → 球变红 + 停止动画
+   ============================================================ */
+
+.orb[data-state='idle'] .orb__canvas {
+  /* v9：移除 animation-duration（已无 breathe 动画），仅保留 opacity */
+  opacity: 0.9;
+}
+.orb[data-state='idle'] .orb__ring {
+  opacity: 0.3;
+}
+
+.orb[data-state='recording'] .orb__canvas {
+  /* v9：移除 animation-duration */
+  opacity: 1;
+}
+.orb[data-state='recording'] .orb__ring {
+  animation-duration: 1.6s;
+  border-color: rgba(74, 168, 255, 0.75);
+  border-width: 2.5px;
+  opacity: 1;
+}
+/* M5.3：录音态追加第二层外扩脉冲环（::before 伪元素），像 iPhone 录音那种信号 */
+.orb[data-state='recording'] .orb-hit::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 110px;
+  height: 110px;
+  margin-left: -55px;
+  margin-top: -55px;
+  border-radius: 50%;
+  border: 2px solid rgba(74, 168, 255, 0.65);
+  animation: ring-pulse 1.6s ease-out infinite;
+  pointer-events: none;
+}
+/* 只在 recording 态显示脉冲 */
+.orb-hit::before {
+  display: none;
+}
+.orb[data-state='recording'] .orb-hit::before {
+  display: block;
+}
+
+/* compact 尺寸下脉冲环改小，放在 compact 专属块里面统一控制 */
+.orb[data-size='compact'][data-state='recording'] .orb-hit::before {
+  width: 44px;
+  height: 44px;
+  margin-left: -22px;
+  margin-top: -22px;
+  border-width: 1.5px;
+}
+
+@keyframes ring-pulse {
+  0% {
+    transform: scale(0.75);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+.orb[data-state='transcribing'] .orb__canvas {
+  /* v9：移除 animation-duration */
+}
+.orb[data-state='transcribing'] .orb__ring {
+  opacity: 0.25;
+  border-color: rgba(138, 108, 255, 0.6);
+}
+.orb[data-state='transcribing'] .orb__spinner {
+  opacity: 1;
+}
+
+.orb[data-state='injecting'] .orb__canvas {
+  /* v9：移除 pulse 动画，注入时的视觉反馈由粒子系统内部加速度承担 */
+}
+.orb[data-state='injecting'] .orb__ring {
+  border-color: rgba(60, 197, 102, 0.7);
+  opacity: 1;
+}
+
+.orb[data-state='error'] .orb__canvas {
+  /* v9：已无 animation 可关，仅保留不透明度 */
+  opacity: 1;
+}
+.orb[data-state='error'] .orb__ring {
+  animation: none;
+  border-color: rgba(255, 90, 90, 0.7);
+  opacity: 0.8;
+}
+
+/* ---- 动画关键帧 ---- */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ============================================================
+   Voice Activity（M5.2）：录音中根据 data-voice 区分说话/静音
+   仅在 data-state="recording" 生效，其他状态忽略
+   - silent: 呼吸慢、光晕弱（等待用户开口）
+   - active: 呼吸快、光晕强、色相更暖（捕捉到人声）
+   ============================================================ */
+.orb[data-state='recording'][data-voice='silent'] .orb__canvas {
+  /* v9：移除 animation-duration（已无 breathe） */
+  opacity: 0.9;
+}
+.orb[data-state='recording'][data-voice='silent'] .orb__ring {
+  animation-duration: 2.4s;
+  opacity: 0.35;
+}
+
+.orb[data-state='recording'][data-voice='active'] .orb__canvas {
+  /* v9：移除 animation-duration */
+  opacity: 1;
+}
+.orb[data-state='recording'][data-voice='active'] .orb__ring {
+  animation-duration: 1s;
+  border-color: rgba(255, 255, 255, 0.85);
+  border-width: 3px;
+  opacity: 1;
+  /* 说话时整圈 ring 轻微扩散，与粒子系统的辉光扩散打配 */
+  transform: scale(1.04);
+  transition: transform 0.18s ease-out, border-color 0.18s linear;
+}
+
+/* ============================================================
+   快捷键提示标签（M5.2）：球下方的小 hint
+   窗口已在 main 侧预留了 ORB_HINT_EXTRA_HEIGHT=36px
+   ============================================================ */
+.orb-hint {
+  pointer-events: none; /* 只是展示，不抢事件 */
+  /* 底下的文字标签不跟着球一起 scale/shrink */
+  margin-top: 2px;
+  /* M6.1：整体半透明，避免抢镜粒子球（用户反馈"快捷键提示太实"） */
+  opacity: 0.6;
+  transition: opacity 200ms ease;
+}
+.orb-hint:hover {
+  /* 悬停时恢复清晰，方便辨认 */
+  opacity: 0.95;
+}
+.orb-hint[hidden] {
+  display: none !important;
+}
+.orb-hint__kbd {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Mono', Menlo, monospace;
+  color: rgba(230, 232, 238, 0.7);
+  background: rgba(20, 24, 34, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Compact 尺寸（M5.3 / M6 / v9.4）：小版球，便于拖到屏幕角落驻留
+   窗口尺寸由 main 侧控制为 88×88（v9.3 前为 64）；CSS 负责把命中区 / 外圈 / spinner
+   全部等比缩放。球核（canvas + 粒子）由 Three.js 自己按 compact 降档。
+   ============================================================ */
+.orb[data-size='compact'] .orb-hit {
+  width: 56px;
+  height: 56px;
+}
+
+/* v9：compact 下也不再有呼吸动画（注释保留以记载历史） */
+/* .orb[data-size='compact'] .orb__canvas { animation-name: breathe-compact; } */
+
+/* compact 外圈光环：从 120 → 52（比命中区略小，避免溢出） */
+.orb[data-size='compact'] .orb__ring {
+  width: 52px;
+  height: 52px;
+  border-width: 1px;
+}
+
+/* compact 下的 spinner（转写态）：从 106 → 50 */
+.orb[data-size='compact'] .orb__spinner {
+  width: 50px;
+  height: 50px;
+  border-width: 2px;
+}
+
+/* compact 下必然隐藏 hint（main/renderer/CSS 三重保险） */
+.orb[data-size='compact'] .orb-hint {
+  display: none !important;
+}
+
+/* ---- compact · 强化状态反馈（粒子色本身已区分，ring 做兜底轮廓） ----
+   40px 下就算 WebGL 偶尔初始化慢，ring 的颜色/粗细也能让用户看清状态。
+*/
+
+/* idle：外圈 ring 很淡 */
+.orb[data-size='compact'][data-state='idle'] .orb__ring {
+  opacity: 0.2;
+  border-color: rgba(180, 200, 230, 0.4);
+}
+
+/* recording · silent：ring 变粗、亮蓝 */
+.orb[data-size='compact'][data-state='recording'] .orb__ring {
+  opacity: 1;
+  border-width: 1.5px;
+  border-color: rgba(105, 194, 255, 0.9);
+}
+
+/* recording · voice-active：ring 变白且扩张 */
+.orb[data-size='compact'][data-state='recording'][data-voice='active'] .orb__ring {
+  border-color: rgba(255, 255, 255, 0.95);
+  border-width: 2px;
+  animation-duration: 1s;
+  transform: scale(1.05);
+}
+
+/* transcribing：紫色 ring */
+.orb[data-size='compact'][data-state='transcribing'] .orb__ring {
+  border-color: rgba(138, 108, 255, 0.85);
+}
+
+/* injecting：绿色 ring */
+.orb[data-size='compact'][data-state='injecting'] .orb__ring {
+  border-color: rgba(60, 197, 102, 0.9);
+}
+
+/* error：红色 ring */
+.orb[data-size='compact'][data-state='error'] .orb__ring {
+  border-color: rgba(255, 90, 90, 0.9);
+}
+
+/* compact 专属呼吸动画：scale 幅度收窄，防止小球"跳"出感 */
+@keyframes breathe-compact {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.88;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   装饰层隐藏（用户偏好：不要外圈波纹）
+   Dex 方案 B：保留 DOM 节点以便后续可逆，但在视觉上彻底藏掉。
+   这三个选择器必须写在文件最末尾，才能覆盖前面所有 state/size
+   变体里对它们的显式 opacity/display/animation 设置。
+   ============================================================ */
+.orb__ring,
+.orb__spinner,
+.orb-hit::before {
+  display: none !important;
+}
+
+/* ============================================================
+   v9.5（2026-05-11）：Compact 模式 · 静态标注环（定向解禁）
+   ------------------------------------------------------------
+   背景：normal 模式延续"不要外圈波纹"的偏好（上方禁令保留）；
+        compact 模式下球太小，需要一圈静态描边紧贴球体外缘当作"轮廓"，
+        同时让用户更容易看清状态色（环跟随球的状态色平滑过渡）。
+   策略：仅 compact 解禁 .orb__ring，静态、无 scale/无脉冲动画。
+   尺寸：粒子球视觉直径 ~38~40px，环外径 42px（紧贴球体，仅 ~2px gap）。
+   ------------------------------------------------------------
+   v9.5.1（2026-05-11）调整：
+     - 用户反馈环离球太远 → 62px 缩到 42px，紧贴球体
+     - border 加 box-shadow 辉光提亮观感
+     - compact 下禁掉 hit 区 hover/active 的 transform 与 filter
+   ============================================================ */
+.orb[data-size='compact'] .orb__ring {
+  display: block !important;
+  /* 紧贴球体：粒子团 ~38~40px，环外径 42px，单边仅 ~1~2px gap */
+  width: 42px;
+  height: 42px;
+  border-width: 2px;
+  /* 静态：取消所有动画与 scale，仅保留颜色平滑过渡 */
+  animation: none !important;
+  transform: none !important;
+  transition: border-color 220ms ease, box-shadow 220ms ease, opacity 220ms ease;
+  opacity: 1;
+}
+
+/* —— 提亮：每个状态在原有 border-color 基础上叠加 box-shadow 辉光 —— */
+/* v9.5.2（2026-05-11）：用户反馈太亮 → 整体回调（辉光半径/透明度对半砍） */
+
+/* idle：冷白细描边 + 极弱微辉光 */
+.orb[data-size='compact'][data-state='idle'] .orb__ring {
+  opacity: 0.9;
+  border-color: rgba(200, 220, 245, 0.7);
+  box-shadow:
+    0 0 3px rgba(200, 220, 245, 0.18),
+    inset 0 0 2px rgba(200, 220, 245, 0.1);
+}
+
+/* recording · silent：亮蓝描边 + 蓝微辉光 */
+.orb[data-size='compact'][data-state='recording'] .orb__ring {
+  border-color: rgba(135, 210, 255, 0.85);
+  box-shadow:
+    0 0 4px rgba(105, 194, 255, 0.3),
+    inset 0 0 2px rgba(135, 210, 255, 0.14);
+}
+
+/* recording · voice-active：白描边 + 白微辉光（不再 scale；保留最高层级辉光） */
+.orb[data-size='compact'][data-state='recording'][data-voice='active'] .orb__ring {
+  transform: none !important;
+  animation: none !important;
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 0 5px rgba(255, 255, 255, 0.4),
+    inset 0 0 3px rgba(255, 255, 255, 0.18);
+}
+
+/* transcribing：紫描边 + 紫微辉光 */
+.orb[data-size='compact'][data-state='transcribing'] .orb__ring {
+  border-color: rgba(168, 138, 255, 0.85);
+  box-shadow:
+    0 0 4px rgba(138, 108, 255, 0.3),
+    inset 0 0 2px rgba(168, 138, 255, 0.14);
+}
+
+/* injecting：绿描边 + 绿微辉光 */
+.orb[data-size='compact'][data-state='injecting'] .orb__ring {
+  border-color: rgba(90, 220, 130, 0.85);
+  box-shadow:
+    0 0 4px rgba(60, 197, 102, 0.3),
+    inset 0 0 2px rgba(90, 220, 130, 0.14);
+}
+
+/* error：红描边 + 红微辉光 */
+.orb[data-size='compact'][data-state='error'] .orb__ring {
+  border-color: rgba(255, 120, 120, 0.85);
+  box-shadow:
+    0 0 4px rgba(255, 90, 90, 0.3),
+    inset 0 0 2px rgba(255, 120, 120, 0.14);
+}
+
+/* —— compact 下禁掉 hit 区 hover/active 动效（用户要求"hover 上去不要动效"） —— */
+/* normal 模式的 hover 动效在 .orb-hit:hover 全局生效（不动），仅 compact 关闭 */
+.orb[data-size='compact'] .orb-hit:hover {
+  transform: none;
+  filter: none;
+}
+.orb[data-size='compact'] .orb-hit:active {
+  transform: none;
+  filter: none;
+}
+

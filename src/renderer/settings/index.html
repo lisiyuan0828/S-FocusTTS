@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    />
+    <title>S-FocusTTS · 设置</title>
+    <link rel="stylesheet" href="./settings.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- ============ 顶部 AppBar ============ -->
+      <header class="appbar">
+        <div class="appbar__left">
+          <div class="brand">
+            <span class="brand__logo icon-slot icon-slot--logo" aria-hidden="true"></span>
+            <div class="brand__text">
+        <span class="brand__name">S-FocusTTS</span>
+              <span class="brand__ver" id="appbarVersion">v—</span>
+            </div>
+          </div>
+          <nav class="crumbs" aria-label="位置">
+            <span class="crumbs__sep" aria-hidden="true"></span>
+            <span class="crumbs__cur">控制面板</span>
+          </nav>
+        </div>
+
+        <!-- 中央搜索框 / 右侧偏好·通知·账户图标已移除（用户反馈不需要） -->
+      </header>
+
+      <!-- ============ 主体 ============ -->
+      <main class="panel">
+        <!-- ───── 录音 ───── -->
+        <section class="group" aria-labelledby="grp-record-title">
+          <header class="group__head">
+            <span class="group__icon icon-slot icon-slot--mic" aria-hidden="true"></span>
+            <div class="group__text">
+              <h2 id="grp-record-title" class="group__title">录音</h2>
+              <p class="group__desc">配置核心音频捕获和硬件处理。</p>
+            </div>
+          </header>
+
+          <div class="group__body">
+            <!-- 音频输入设备（占位，后续接入主进程枚举） -->
+            <article class="item">
+              <div class="item__main">
+                <h3 class="item__title">音频输入设备</h3>
+                <p class="item__desc">选择用于神经转录的主要硬件来源。</p>
+              </div>
+              <div class="item__ctrl">
+                <div class="pseudo-select" id="audioDevice" data-readonly="true">
+                  <span class="pseudo-select__text">Starlight Pro XLR Interface</span>
+                  <span class="pseudo-select__check icon-slot icon-slot--check" aria-hidden="true"></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- 录音快捷键（保留旧 id） -->
+            <article class="item">
+              <div class="item__main">
+                <h3 class="item__title">录音快捷键</h3>
+                <p class="item__desc">全局组合键，按一次开始录音，再按一次停录。</p>
+              </div>
+              <div class="item__ctrl">
+                <div class="kbd-capture" id="kbdCapture" data-state="idle">
+                  <div class="kbd-capture__keys" id="shortcutDisplay" aria-label="当前快捷键">
+                    <kbd class="kbd-key kbd-key--placeholder">—</kbd>
+                  </div>
+                  <button id="kbdRecordBtn" class="btn ghost mini">修改</button>
+                </div>
+              </div>
+            </article>
+
+            <!-- 球下方显示快捷键 -->
+            <article class="item">
+              <div class="item__main">
+                <h3 class="item__title">球下方显示快捷键</h3>
+                <p class="item__desc">让新用户一眼看到停录方式。</p>
+              </div>
+              <div class="item__ctrl">
+                <label class="switch">
+                  <input id="showShortcutHint" type="checkbox" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ───── 外观 ───── -->
+        <section class="group" aria-labelledby="grp-appearance-title">
+          <header class="group__head">
+            <span class="group__icon icon-slot icon-slot--palette" aria-hidden="true"></span>
+            <div class="group__text">
+              <h2 id="grp-appearance-title" class="group__title">外观</h2>
+              <p class="group__desc">自定义视觉反馈和界面密度。</p>
+            </div>
+          </header>
+
+          <div class="group__body">
+            <!-- 呼吸球大小 -->
+            <article class="item item--with-preview">
+              <span class="item__preview icon-slot icon-slot--orb" aria-hidden="true"></span>
+              <div class="item__main">
+                <h3 class="item__title">呼吸球大小</h3>
+                <p class="item__desc">缩放 HUD 中的律动焦点指示器。</p>
+              </div>
+              <div class="item__ctrl">
+                <div class="seg" id="orbSizeSeg" role="radiogroup" aria-label="呼吸球尺寸">
+                  <button
+                    type="button"
+                    class="seg__btn"
+                    data-value="normal"
+                    role="radio"
+                    aria-checked="true"
+                  >
+                    标准
+                  </button>
+                  <button
+                    type="button"
+                    class="seg__btn"
+                    data-value="compact"
+                    role="radio"
+                    aria-checked="false"
+                  >
+                    紧凑
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <!-- 常显模式（保留旧功能） -->
+            <article class="item">
+              <div class="item__main">
+                <h3 class="item__title">常显模式</h3>
+                <p class="item__desc">打开后球一直显示；快捷键/左键 = 录音开关。</p>
+              </div>
+              <div class="item__ctrl">
+                <label class="switch">
+                  <input id="alwaysShow" type="checkbox" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ───── 文本注入 ───── -->
+        <section class="group" aria-labelledby="grp-inject-title">
+          <header class="group__head">
+            <span class="group__icon icon-slot icon-slot--cmd" aria-hidden="true"></span>
+            <div class="group__text">
+              <h2 id="grp-inject-title" class="group__title">文本注入</h2>
+              <p class="group__desc">管理数据注入外部终端系统的方式。</p>
+            </div>
+          </header>
+
+          <div class="group__body">
+            <article class="item item--with-preview">
+              <span class="item__preview icon-slot icon-slot--chip" aria-hidden="true"></span>
+              <div class="item__main">
+                <h3 class="item__title">注入模式</h3>
+                <p class="item__desc">在内核级缓冲区和模拟按键之间切换。</p>
+              </div>
+              <div class="item__ctrl">
+                <!-- 保留原 select 以兼容 settings.ts 逻辑，视觉上外壳化 -->
+                <div class="select-wrap">
+                  <select id="injectMode">
+                    <option value="auto">自动（推荐）</option>
+                    <option value="keyboard">键盘逐字</option>
+                    <option value="clipboard">剪贴板粘贴</option>
+                  </select>
+                  <span class="select-wrap__chev icon-slot icon-slot--chev" aria-hidden="true"></span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ───── 双列：识别 / 启动 ───── -->
+        <section class="duo">
+          <!-- 识别（语言选择改为列表卡片） -->
+          <article class="duo__cell" aria-labelledby="grp-recog-title">
+            <header class="duo__head">
+              <span class="duo__icon icon-slot icon-slot--model" aria-hidden="true"></span>
+              <h2 id="grp-recog-title" class="duo__title">识别</h2>
+            </header>
+            <p class="duo__desc">选择用于实时翻译的神经语言模型。</p>
+            <ul
+              class="lang-list"
+              id="langList"
+              role="radiogroup"
+              aria-label="识别语言"
+            >
+              <li class="lang-list__item" data-value="en" role="radio" aria-checked="false">
+                <span class="lang-list__name">EN-US Neural High</span>
+                <span class="lang-list__check icon-slot icon-slot--check" aria-hidden="true"></span>
+              </li>
+              <li class="lang-list__item" data-value="zh" role="radio" aria-checked="false">
+                <span class="lang-list__name">ZH-CN Quantum 1.4</span>
+                <span class="lang-list__check icon-slot icon-slot--check" aria-hidden="true"></span>
+              </li>
+              <li class="lang-list__item" data-value="auto" role="radio" aria-checked="false">
+                <span class="lang-list__name">Auto-Detect</span>
+                <span class="lang-list__check icon-slot icon-slot--check" aria-hidden="true"></span>
+              </li>
+            </ul>
+            <!-- 隐藏的旧 select 保持事件绑定兼容 -->
+            <select id="asrLanguage" hidden>
+              <option value="zh">中文</option>
+              <option value="en">英文</option>
+              <option value="auto">自动检测</option>
+            </select>
+          </article>
+
+          <!-- 启动 -->
+          <article class="duo__cell" aria-labelledby="grp-startup-title">
+            <header class="duo__head">
+              <span class="duo__icon icon-slot icon-slot--rocket" aria-hidden="true"></span>
+              <h2 id="grp-startup-title" class="duo__title">启动</h2>
+            </header>
+            <p class="duo__desc">在系统初始化时自动初始化内核。</p>
+            <div class="duo__filler"></div>
+            <div class="duo__row">
+              <span class="duo__row-label">开机自启</span>
+              <label class="switch switch--lg">
+                <input id="launchAtLogin" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </article>
+        </section>
+
+        <!-- ───── 权限（仅 mac 显示，放在次要位置） ───── -->
+        <section class="group" id="permSection" hidden>
+          <header class="group__head">
+            <span class="group__icon icon-slot icon-slot--shield" aria-hidden="true"></span>
+            <div class="group__text">
+              <h2 class="group__title">权限</h2>
+              <p class="group__desc">macOS 辅助功能权限（用于文本注入）。</p>
+            </div>
+          </header>
+          <div class="group__body">
+            <article class="item">
+              <div class="item__main">
+                <h3 class="item__title">辅助功能</h3>
+              </div>
+              <div class="item__ctrl">
+                <span id="permStatus" class="pill">—</span>
+                <button id="openAx" class="btn ghost">打开系统设置</button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ───── 系统信息（可折叠放底部） ───── -->
+        <section class="group group--diag">
+          <header class="group__head">
+            <span class="group__icon icon-slot icon-slot--info" aria-hidden="true"></span>
+            <div class="group__text">
+              <h2 class="group__title">系统信息</h2>
+              <p class="group__desc">诊断与路径。</p>
+            </div>
+          </header>
+          <div class="group__body">
+            <dl class="kv">
+              <dt>版本</dt><dd id="diagVersion">—</dd>
+              <dt>平台</dt><dd id="diagPlatform">—</dd>
+              <dt>录音目录</dt>
+              <dd class="path-cell">
+                <code id="diagRecordingsDir">—</code>
+                <button class="btn mini" id="openRecordings">打开</button>
+              </dd>
+              <dt>whisper-cli</dt>
+              <dd class="path-cell">
+                <code id="diagWhisperBin">—</code>
+                <span id="diagWhisperBinState" class="pill pill-gray">—</span>
+              </dd>
+              <dt>模型文件</dt>
+              <dd class="path-cell">
+                <code id="diagModel">—</code>
+                <span id="diagModelState" class="pill pill-gray">—</span>
+              </dd>
+            </dl>
+          </div>
+        </section>
+      </main>
+
+      <!-- ============ 底部状态栏 ============ -->
+      <footer class="statusbar">
+        <div class="statusbar__left">
+          <span class="statusbar__dot" aria-hidden="true"></span>
+          <span>系统状态正常</span>
+          <span class="statusbar__sep">·</span>
+          <span>延迟：<b id="statLatency">12ms</b></span>
+        </div>
+        <div class="statusbar__right">
+          <span id="saveHint" class="save-hint"></span>
+          <span id="statSync">实时同步已开启</span>
+        </div>
+      </footer>
+    </div>
+
+    <script type="module" src="./settings.ts"></script>
+  </body>
+</html>

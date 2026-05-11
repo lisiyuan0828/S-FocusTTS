@@ -1,0 +1,972 @@
+/* ============================================================
+  S-FocusTTS · Settings v2 样式
+   设计语言：深色航天 · 青绿/紫/粉点缀 · 网格底纹 · 卡片化
+   ------------------------------------------------------------
+   结构：
+     .app              → 1280/居中页面容器
+       .appbar         → 顶部条（Logo + 面包屑 + 搜索 + 图标按钮）
+       .panel          → 主内容（多个 .group 垂直堆叠 + .duo 双列）
+       .statusbar      → 底部状态栏
+   核心颜色：
+     --bg-0   #0b0e15   最深背景
+     --bg-1   #11151f   面板
+     --ink-0  #f3f5fa   一级文字
+     --ink-1  #aab2c4   二级文字
+     --ink-2  #6d7590   辅助文字
+     --line   rgba(255,255,255,.06)
+     --accent #7df0d3   青绿主色
+     --accent-purple #c3afff
+     --accent-pink   #ff9fc6
+   ============================================================ */
+
+:root {
+  --bg-0: #0b0e15;
+  --bg-1: #11151f;
+  --bg-2: #161b27;
+  --ink-0: #f3f5fa;
+  --ink-1: #aab2c4;
+  --ink-2: #6d7590;
+  --ink-3: #4d5470;
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.12);
+  --accent: #7df0d3;
+  --accent-dim: rgba(125, 240, 211, 0.18);
+  --accent-purple: #c3afff;
+  --accent-purple-dim: rgba(195, 175, 255, 0.18);
+  --accent-pink: #ff9fc6;
+  --danger: #ff8a8a;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--bg-0);
+  color: var(--ink-0);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 13px;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 全局网格底纹：用双 linear-gradient 画细网格 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 40%, transparent 90%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 40%, transparent 90%);
+  z-index: 0;
+}
+
+code {
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #b9c0d2;
+  word-break: break-all;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ============ 页面容器 ============ */
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 28px 40px;
+}
+
+/* ============ AppBar ============ */
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 0 12px;
+  background: linear-gradient(180deg, rgba(11, 14, 21, 0.96) 70%, rgba(11, 14, 21, 0));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.appbar__left {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand__logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent));
+  box-shadow: 0 0 12px rgba(125, 240, 211, 0.35);
+  position: relative;
+}
+.brand__logo::after {
+  /* 占位：待用户传真实 icon；这里用对角亮线做占位质感 */
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 4px;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.25), transparent 60%);
+}
+.brand__text {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+.brand__name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-0);
+  letter-spacing: 0.5px;
+}
+.brand__ver {
+  font-size: 10px;
+  color: var(--ink-2);
+  letter-spacing: 0.4px;
+}
+.crumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+  padding-left: 6px;
+  position: relative;
+}
+.crumbs__sep {
+  width: 1px;
+  height: 18px;
+  background: var(--line-strong);
+}
+.crumbs__cur {
+  letter-spacing: 0.3px;
+}
+
+/* 搜索 */
+.appbar__center {
+  display: flex;
+  justify-content: center;
+}
+.search {
+  position: relative;
+  width: min(360px, 100%);
+}
+.search__input {
+  width: 100%;
+  padding: 8px 36px 8px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--ink-0);
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+  font-family: inherit;
+}
+.search__input::placeholder {
+  color: var(--ink-2);
+}
+.search__input:focus {
+  border-color: rgba(125, 240, 211, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+}
+.search__icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  opacity: 0.55;
+}
+
+/* 右侧图标按钮 */
+.appbar__right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.iconbtn {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  color: var(--ink-1);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.iconbtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--line-strong);
+  color: var(--ink-0);
+}
+.iconbtn__dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  background: var(--accent-pink);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--accent-pink);
+}
+.avatar {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  background: linear-gradient(135deg, #3a3f55, #1c2030);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.avatar:hover {
+  border-color: var(--accent);
+}
+
+/* ============ 图标占位（等用户补真实图标时替换 background-image） ============ */
+.icon-slot {
+  display: inline-block;
+  background-color: currentColor;
+  opacity: 0.75;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+/* 组内占位默认尺寸 */
+.group__icon {
+  width: 22px;
+  height: 22px;
+}
+.duo__icon,
+.item__preview {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============ 分组（.group） ============ */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 28px 0 0;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.group__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 0 4px;
+}
+.group__icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--accent-purple-dim);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-purple);
+  font-size: 18px;
+  box-shadow: inset 0 0 0 1px rgba(195, 175, 255, 0.35);
+}
+/* 不同分组的图标底色变体 */
+.group:nth-of-type(1) .group__icon {
+  background: var(--accent-purple-dim);
+  color: var(--accent-purple);
+  box-shadow: inset 0 0 0 1px rgba(195, 175, 255, 0.35);
+}
+.group:nth-of-type(2) .group__icon {
+  background: rgba(255, 159, 198, 0.16);
+  color: var(--accent-pink);
+  box-shadow: inset 0 0 0 1px rgba(255, 159, 198, 0.35);
+}
+.group:nth-of-type(3) .group__icon {
+  background: var(--accent-dim);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(125, 240, 211, 0.35);
+}
+.group__icon::after {
+  /* 图标占位的内凹装饰（等真实 icon 就去掉） */
+  content: '';
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: currentColor;
+  opacity: 0.35;
+}
+
+.group__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 2px;
+}
+.group__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink-0);
+  letter-spacing: 0.2px;
+}
+.group__desc {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.group__body {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 6px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============ 条目（.item） ============ */
+.item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.item:last-of-type,
+.item + .item__sub:last-child,
+.group__body > .item:last-child {
+  border-bottom: none;
+}
+/* item 前置预览图（如呼吸球、芯片）*/.item__preview {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #1b6a7a, #0b2230 70%);
+  box-shadow:
+    inset 0 0 0 1px rgba(125, 240, 211, 0.35),
+    0 0 18px rgba(125, 240, 211, 0.15);
+}
+.item--with-preview {
+  grid-template-columns: 44px 1fr auto;
+}
+.item__main {
+  min-width: 0;
+}
+.item__title {
+  margin: 0 0 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.2px;
+}
+.item__desc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+.item__ctrl {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: end;
+}
+
+/* 特化：第二组（外观）里的预览 = 呼吸球色 */
+.group:nth-of-type(2) .item__preview {
+  background: radial-gradient(circle at 35% 35%, #2a8a7d, #0a2822 70%);
+  box-shadow:
+    inset 0 0 0 1px rgba(125, 240, 211, 0.45),
+    0 0 22px rgba(125, 240, 211, 0.2);
+}
+/* 第三组（文本注入）预览 = 芯片紫 */
+.group:nth-of-type(3) .item__preview {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2a2450, #1a1732);
+  box-shadow: inset 0 0 0 1px rgba(195, 175, 255, 0.35);
+}
+
+/* ============ 伪选择器（只展示当前值，后续可替换为 select） ============ */
+.pseudo-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--ink-0);
+  font-size: 12.5px;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  letter-spacing: 0.2px;
+}
+.pseudo-select__check {
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.9;
+}
+
+/* ============ 真 select（注入模式沿用） ============ */
+.select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.select-wrap__chev {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+  width: 10px;
+  height: 10px;
+  color: var(--ink-1);
+  clip-path: polygon(0 30%, 50% 90%, 100% 30%, 85% 15%, 50% 60%, 15% 15%);
+  background: currentColor;
+}
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 8px 32px 8px 14px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--ink-0);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  min-width: 160px;
+}
+select:hover {
+  border-color: rgba(125, 240, 211, 0.4);
+}
+select:focus {
+  border-color: rgba(125, 240, 211, 0.6);
+}
+
+/* ============ 按钮 ============ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: rgba(125, 240, 211, 0.1);
+  color: var(--ink-0);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn:hover {
+  background: rgba(125, 240, 211, 0.18);
+  border-color: rgba(125, 240, 211, 0.4);
+}
+.btn.ghost {
+  background: transparent;
+}
+.btn.mini {
+  padding: 3px 10px;
+  font-size: 11.5px;
+}
+
+/* ============ 开关 ============ */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+  min-width: 38px;
+}
+.switch--lg {
+  width: 44px;
+  height: 24px;
+  min-width: 44px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #2a3145;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+.slider::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.22s cubic-bezier(0.3, 0.1, 0.2, 1.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.switch--lg .slider::before {
+  width: 18px;
+  height: 18px;
+}
+.switch input:checked + .slider {
+  background: linear-gradient(90deg, #3ec7a7, #7df0d3);
+  box-shadow: 0 0 10px rgba(125, 240, 211, 0.35);
+}
+.switch input:checked + .slider::before {
+  transform: translateX(16px);
+}
+.switch--lg input:checked + .slider::before {
+  transform: translateX(20px);
+}
+
+/* ============ Segmented 单选 ============ */
+.seg {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+.seg__btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ink-1);
+  padding: 6px 18px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+.seg__btn:hover {
+  color: var(--ink-0);
+}
+.seg__btn.is-active {
+  background: linear-gradient(135deg, var(--accent-purple-dim), rgba(195, 175, 255, 0.28));
+  color: var(--ink-0);
+  box-shadow: inset 0 0 0 1px rgba(195, 175, 255, 0.5);
+}
+
+/* ============ 状态胶囊 ============ */
+.pill {
+  display: inline-flex;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+.pill-gray {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink-1);
+}
+.pill-green {
+  background: rgba(125, 240, 211, 0.16);
+  color: var(--accent);
+}
+.pill-red {
+  background: rgba(255, 138, 138, 0.16);
+  color: var(--danger);
+}
+.pill-yellow {
+  background: rgba(255, 188, 74, 0.16);
+  color: #ffcf7a;
+}
+
+/* ============ 双列 .duo ============ */
+.duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.duo__cell {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.duo__head {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.duo__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.duo__cell:nth-of-type(1) .duo__icon {
+  background: var(--accent-dim);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(125, 240, 211, 0.35);
+}
+.duo__cell:nth-of-type(2) .duo__icon {
+  background: var(--accent-dim);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(125, 240, 211, 0.35);
+}
+.duo__icon::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  border-radius: 3px;
+  opacity: 0.4;
+}
+.duo__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-0);
+}
+.duo__desc {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+.duo__filler {
+  flex: 1;
+  min-height: 8px;
+}
+.duo__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+}
+.duo__row-label {
+  font-size: 13px;
+  color: var(--ink-0);
+}
+
+/* 语言列表 */
+.lang-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lang-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--ink-1);
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.lang-list__item:hover {
+  color: var(--ink-0);
+  border-color: rgba(125, 240, 211, 0.35);
+}
+.lang-list__item[aria-checked='true'] {
+  color: var(--accent);
+  border-color: rgba(125, 240, 211, 0.6);
+  background: rgba(125, 240, 211, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(125, 240, 211, 0.2);
+}
+.lang-list__check {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: transparent;
+}
+.lang-list__item[aria-checked='true'] .lang-list__check {
+  background: var(--accent);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ============ 键值对 kv ============ */
+.kv {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 10px 18px;
+  margin: 6px 0;
+}
+.kv dt {
+  color: var(--ink-1);
+  font-size: 12px;
+  padding-top: 3px;
+}
+.kv dd {
+  margin: 0;
+  padding: 0;
+  color: var(--ink-0);
+  font-size: 12.5px;
+}
+.path-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.path-cell code {
+  flex: 1;
+  min-width: 0;
+}
+/* 让"录音目录/whisper-cli/模型文件"三行的右侧操作元素等宽，
+   消除"已就绪"pill 与"打开"按钮的天然字宽差异，保证三行的 code 胶囊
+   剩余空间一致、整列右边沿对齐到 1px。
+   56px 容纳最长文案"已就绪/缺失"，对"打开"两字也视觉舒适。 */
+.path-cell > .btn.mini,
+.path-cell > .pill {
+  min-width: 56px;
+  justify-content: center;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ============ 快捷键录制器 ============ */
+.kbd-capture {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 8px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.25);
+  transition:
+    border-color 0.18s,
+    background 0.18s,
+    box-shadow 0.18s;
+}
+
+/* 分体键帽容器：把 ⌘ ⇧ space 拆成多枚独立键帽 */
+.kbd-capture__keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+/* 单枚键帽：仿 macOS 暗色模式下系统偏好里的 keycap 视觉 */
+.kbd-key {
+  --kbd-bg-top: rgba(255, 255, 255, 0.09);
+  --kbd-bg-bot: rgba(255, 255, 255, 0.03);
+  --kbd-border: rgba(255, 255, 255, 0.18);
+  --kbd-border-bottom: rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Text',
+    'Segoe UI',
+    'PingFang SC',
+    sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--ink-0);
+  background: linear-gradient(180deg, var(--kbd-bg-top) 0%, var(--kbd-bg-bot) 100%);
+  border: 1px solid var(--kbd-border);
+  /* 底边稍弱一点保留立体感，但不再用近黑色（在深底色容器里会消失） */
+  border-bottom-color: var(--kbd-border-bottom);
+  border-radius: 5px;
+  /* 立体感全部走 inset（内阴影），避免外部 drop-shadow 在深背景中失效 */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+  letter-spacing: 0.2px;
+  font-variant-numeric: tabular-nums;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    color 0.18s,
+    border-color 0.18s;
+}
+
+/* 修饰键（⌘ ⇧ ⌥ ⌃）：稍微高亮一点点 */
+.kbd-key--mod {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* 加宽键（Space / 长键名）：模拟物理 Space 键的形态 */
+.kbd-key--wide {
+  min-width: 56px;
+  padding: 0 10px;
+  letter-spacing: 0.6px;
+}
+
+/* 占位符（— 横线）：去掉键帽质感，仅作"未设置"提示 */
+.kbd-key--placeholder {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--ink-2);
+  font-weight: 400;
+}
+
+/* 录制中：容器整体描边发光 + 键帽轻微脉动 */
+.kbd-capture[data-state='capturing'] {
+  border-color: var(--accent);
+  background: linear-gradient(
+    180deg,
+    rgba(125, 240, 211, 0.08) 0%,
+    rgba(125, 240, 211, 0.02) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 3px rgba(125, 240, 211, 0.1);
+  animation: kbd-pulse 1.4s ease-in-out infinite;
+}
+.kbd-capture[data-state='capturing'] .kbd-key {
+  --kbd-border: rgba(125, 240, 211, 0.45);
+  color: var(--accent);
+}
+
+@keyframes kbd-pulse {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 0 0 0 rgba(125, 240, 211, 0);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 0 0 4px rgba(125, 240, 211, 0.18);
+  }
+}
+
+/* ============ 状态栏 ============ */
+.statusbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 28px;
+  padding: 14px 4px 4px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+.statusbar__left,
+.statusbar__right {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.statusbar__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+.statusbar__sep {
+  color: var(--ink-3);
+}
+.statusbar b {
+  color: var(--ink-1);
+  font-weight: 500;
+}
+.save-hint {
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.25s, color 0.25s;
+}
+.save-hint.show {
+  opacity: 1;
+}
+/* 错误调用：红色变体（复用同一个 toast 入口）*/
+.save-hint[data-tone='error'] {
+  color: var(--danger);
+}
+
+/* ============ 响应式（窄屏折叠） ============ */
+@media (max-width: 820px) {
+  /* AppBar 已退化为单行 flex，无需再做 grid 折叠 */
+  .duo {
+    grid-template-columns: 1fr;
+  }
+  .app {
+    padding: 0 16px 32px;
+  }
+}

@@ -1,0 +1,49 @@
+
+{
+  "name": "s-focustts",
+  "version": "0.1.0",
+  "description": "S-FocusTTS · 全局语音收录，按下即说，松手成字",
+  "author": "S-FocusTTS Team",
+  "license": "MIT",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "setup:tcc": "bash scripts/setup-tcc-app.sh",
+    "dev:tcc": "bash -c 'set -a && source .env.tcc && set +a && electron-vite dev'",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "postinstall": "node node_modules/electron/install.js",
+    "package:mac": "electron-builder --mac",
+    "package:win": "electron-builder --win"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "electron-builder",
+      "@nut-tree-fork/libnut",
+      "@nut-tree-fork/libnut-darwin",
+      "@nut-tree-fork/libnut-linux",
+      "@nut-tree-fork/libnut-win32",
+      "@nut-tree-fork/node-mac-permissions"
+    ]
+  },
+  "dependencies": {
+    "@nut-tree-fork/node-mac-permissions": "^2.2.1",
+    "@nut-tree-fork/nut-js": "^4.2.2",
+    "electron-store": "^8.2.0",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "@types/three": "^0.160.0",
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.4.0"
+  }
+}
+
