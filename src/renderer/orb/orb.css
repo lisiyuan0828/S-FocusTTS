@@ -68,6 +68,37 @@ body {
   transform-origin: center center;
 }
 
+/* ---- v10（2026-05-12）：Compact 专用 · 纯色科技感小球 ----
+   normal 模式下完全隐藏；只有 compact 模式才显示。
+   不用 border（用户明确要求去掉），颜色 & 状态辨识靠 background + box-shadow。
+   粒子系统在 compact 下可暂停（见 orb.ts），进一步省电。
+*/
+.orb__dot {
+  display: none; /* 默认隐藏，仅 compact 模式启用 */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 38px;
+  height: 38px;
+  margin-left: -19px;
+  margin-top: -19px;
+  border-radius: 50%;
+  pointer-events: none;
+  /* 内部高光 + 主色 + 外层辉光，整体走科技冷色调 */
+  background:
+    radial-gradient(circle at 35% 32%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 38%),
+    radial-gradient(circle at 50% 50%, #7fc4ff 0%, #3a8ee6 55%, #1b5bb0 100%);
+  box-shadow:
+    0 0 10px rgba(74, 168, 255, 0.55),
+    0 0 22px rgba(74, 168, 255, 0.28),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.25),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+  transition:
+    background 260ms ease,
+    box-shadow 260ms ease,
+    transform 160ms ease;
+}
+
 /* ---- 外圈光环：轻微扩散（录音时加速） ---- */
 .orb__ring {
   position: absolute;
@@ -313,6 +344,15 @@ body {
   height: 56px;
 }
 
+/* v10（2026-05-12）：compact 模式下粒子看不清且糊 → 改用纯色科技感小球。
+   粒子 canvas 直接隐藏（粒子系统在 orb.ts 里也会被 pause 掉），只保留 .orb__dot。 */
+.orb[data-size='compact'] .orb__canvas {
+  display: none !important;
+}
+.orb[data-size='compact'] .orb__dot {
+  display: block;
+}
+
 /* v9：compact 下也不再有呼吸动画（注释保留以记载历史） */
 /* .orb[data-size='compact'] .orb__canvas { animation-name: breathe-compact; } */
 
@@ -401,85 +441,13 @@ body {
 }
 
 /* ============================================================
-   v9.5（2026-05-11）：Compact 模式 · 静态标注环（定向解禁）
+   v10（2026-05-12）：去掉 compact 的外层标注环（.orb__ring）
    ------------------------------------------------------------
-   背景：normal 模式延续"不要外圈波纹"的偏好（上方禁令保留）；
-        compact 模式下球太小，需要一圈静态描边紧贴球体外缘当作"轮廓"，
-        同时让用户更容易看清状态色（环跟随球的状态色平滑过渡）。
-   策略：仅 compact 解禁 .orb__ring，静态、无 scale/无脉冲动画。
-   尺寸：粒子球视觉直径 ~38~40px，环外径 42px（紧贴球体，仅 ~2px gap）。
-   ------------------------------------------------------------
-   v9.5.1（2026-05-11）调整：
-     - 用户反馈环离球太远 → 62px 缩到 42px，紧贴球体
-     - border 加 box-shadow 辉光提亮观感
-     - compact 下禁掉 hit 区 hover/active 的 transform 与 filter
+   背景：v9.5 曾在 compact 下解禁 .orb__ring 作为轮廓描边；v10 切换到
+        纯色科技感小球（.orb__dot）之后，外层 border 反而显得冗余。
+        故此段整体删除，让文件上方的全局禁令（.orb__ring{display:none!important}）
+        继续生效，compact/normal 两种尺寸均不再出现外圈。
    ============================================================ */
-.orb[data-size='compact'] .orb__ring {
-  display: block !important;
-  /* 紧贴球体：粒子团 ~38~40px，环外径 42px，单边仅 ~1~2px gap */
-  width: 42px;
-  height: 42px;
-  border-width: 2px;
-  /* 静态：取消所有动画与 scale，仅保留颜色平滑过渡 */
-  animation: none !important;
-  transform: none !important;
-  transition: border-color 220ms ease, box-shadow 220ms ease, opacity 220ms ease;
-  opacity: 1;
-}
-
-/* —— 提亮：每个状态在原有 border-color 基础上叠加 box-shadow 辉光 —— */
-/* v9.5.2（2026-05-11）：用户反馈太亮 → 整体回调（辉光半径/透明度对半砍） */
-
-/* idle：冷白细描边 + 极弱微辉光 */
-.orb[data-size='compact'][data-state='idle'] .orb__ring {
-  opacity: 0.9;
-  border-color: rgba(200, 220, 245, 0.7);
-  box-shadow:
-    0 0 3px rgba(200, 220, 245, 0.18),
-    inset 0 0 2px rgba(200, 220, 245, 0.1);
-}
-
-/* recording · silent：亮蓝描边 + 蓝微辉光 */
-.orb[data-size='compact'][data-state='recording'] .orb__ring {
-  border-color: rgba(135, 210, 255, 0.85);
-  box-shadow:
-    0 0 4px rgba(105, 194, 255, 0.3),
-    inset 0 0 2px rgba(135, 210, 255, 0.14);
-}
-
-/* recording · voice-active：白描边 + 白微辉光（不再 scale；保留最高层级辉光） */
-.orb[data-size='compact'][data-state='recording'][data-voice='active'] .orb__ring {
-  transform: none !important;
-  animation: none !important;
-  border-color: rgba(255, 255, 255, 0.95);
-  box-shadow:
-    0 0 5px rgba(255, 255, 255, 0.4),
-    inset 0 0 3px rgba(255, 255, 255, 0.18);
-}
-
-/* transcribing：紫描边 + 紫微辉光 */
-.orb[data-size='compact'][data-state='transcribing'] .orb__ring {
-  border-color: rgba(168, 138, 255, 0.85);
-  box-shadow:
-    0 0 4px rgba(138, 108, 255, 0.3),
-    inset 0 0 2px rgba(168, 138, 255, 0.14);
-}
-
-/* injecting：绿描边 + 绿微辉光 */
-.orb[data-size='compact'][data-state='injecting'] .orb__ring {
-  border-color: rgba(90, 220, 130, 0.85);
-  box-shadow:
-    0 0 4px rgba(60, 197, 102, 0.3),
-    inset 0 0 2px rgba(90, 220, 130, 0.14);
-}
-
-/* error：红描边 + 红微辉光 */
-.orb[data-size='compact'][data-state='error'] .orb__ring {
-  border-color: rgba(255, 120, 120, 0.85);
-  box-shadow:
-    0 0 4px rgba(255, 90, 90, 0.3),
-    inset 0 0 2px rgba(255, 120, 120, 0.14);
-}
 
 /* —— compact 下禁掉 hit 区 hover/active 动效（用户要求"hover 上去不要动效"） —— */
 /* normal 模式的 hover 动效在 .orb-hit:hover 全局生效（不动），仅 compact 关闭 */
@@ -492,3 +460,109 @@ body {
   filter: none;
 }
 
+/* ============================================================
+   v10（2026-05-12）：Compact 纯色科技感小球 · 状态色映射
+   ------------------------------------------------------------
+   背景：v9 紧凑模式复用粒子渲染，用户反馈「看不清、像一团雾」。
+   方案：紧凑模式直接用 CSS 纯色球 + 径向高光 + 外层辉光，
+         状态差异全部走 background(主色) + box-shadow(辉光色/强度)。
+   约束：不用 border（用户明确要求），不做 hover 动效，仅说话/转写/注入
+         这几个活跃态加轻量动画（呼吸/旋转/闪光）。
+   ============================================================ */
+
+/* idle：冷蓝静态，辉光最弱 */
+.orb[data-size='compact'][data-state='idle'] .orb__dot {
+  background:
+    radial-gradient(circle at 35% 32%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 40%),
+    radial-gradient(circle at 50% 50%, #6aa8e8 0%, #3672b8 60%, #1e4a88 100%);
+  box-shadow:
+    0 0 8px rgba(74, 168, 255, 0.35),
+    0 0 16px rgba(74, 168, 255, 0.16),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.28),
+    inset 0 2px 4px rgba(255, 255, 255, 0.18);
+}
+
+/* recording · silent：亮蓝主色 + 蓝辉光，轻微呼吸（"在待命录音"） */
+.orb[data-size='compact'][data-state='recording'] .orb__dot {
+  background:
+    radial-gradient(circle at 35% 32%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 40%),
+    radial-gradient(circle at 50% 50%, #8fd0ff 0%, #3a95ee 55%, #1a5cb8 100%);
+  box-shadow:
+    0 0 12px rgba(105, 194, 255, 0.65),
+    0 0 26px rgba(105, 194, 255, 0.3),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.25),
+    inset 0 2px 4px rgba(255, 255, 255, 0.22);
+  animation: orb-dot-breathe 1.8s ease-in-out infinite;
+}
+
+/* recording · voice-active：白芯 + 强蓝辉光，节奏更快的呼吸（"正在说话"） */
+.orb[data-size='compact'][data-state='recording'][data-voice='active'] .orb__dot {
+  background:
+    radial-gradient(circle at 35% 32%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(circle at 50% 50%, #ffffff 0%, #9fd7ff 35%, #3c8fe6 75%, #1a5bb0 100%);
+  box-shadow:
+    0 0 14px rgba(255, 255, 255, 0.55),
+    0 0 30px rgba(120, 200, 255, 0.6),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.2),
+    inset 0 2px 5px rgba(255, 255, 255, 0.35);
+  animation: orb-dot-breathe 0.9s ease-in-out infinite;
+}
+
+/* transcribing：紫主色 + 旋转微光（"处理中"） */
+.orb[data-size='compact'][data-state='transcribing'] .orb__dot {
+  background:
+    radial-gradient(circle at 35% 32%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 40%),
+    radial-gradient(circle at 50% 50%, #b9a5ff 0%, #7a5ce0 55%, #3e27a0 100%);
+  box-shadow:
+    0 0 12px rgba(138, 108, 255, 0.6),
+    0 0 26px rgba(138, 108, 255, 0.28),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.25),
+    inset 0 2px 4px rgba(255, 255, 255, 0.22);
+  animation: orb-dot-pulse 1.4s ease-in-out infinite;
+}
+
+/* injecting：绿主色 + 绿辉光，快速高亮（"注入中"） */
+.orb[data-size='compact'][data-state='injecting'] .orb__dot {
+  background:
+    radial-gradient(circle at 35% 32%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 40%),
+    radial-gradient(circle at 50% 50%, #a8ee9a 0%, #38b86c 55%, #0f5a2c 100%);
+  box-shadow:
+    0 0 14px rgba(60, 197, 102, 0.7),
+    0 0 28px rgba(60, 197, 102, 0.32),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.22),
+    inset 0 2px 4px rgba(255, 255, 255, 0.22);
+  animation: orb-dot-pulse 0.7s ease-in-out infinite;
+}
+
+/* error：红主色 + 红辉光，静止（警示） */
+.orb[data-size='compact'][data-state='error'] .orb__dot {
+  background:
+    radial-gradient(circle at 35% 32%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 40%),
+    radial-gradient(circle at 50% 50%, #ffa8a8 0%, #e85454 55%, #8a1414 100%);
+  box-shadow:
+    0 0 12px rgba(255, 90, 90, 0.6),
+    0 0 24px rgba(255, 90, 90, 0.3),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.25),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+  animation: none;
+}
+
+/* —— dot 动画关键帧 —— */
+@keyframes orb-dot-breathe {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.08);
+    filter: brightness(1.15);
+  }
+}
+@keyframes orb-dot-pulse {
+  0%, 100% {
+    filter: brightness(0.95);
+  }
+  50% {
+    filter: brightness(1.2);
+  }
+}

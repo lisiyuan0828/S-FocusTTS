@@ -19,6 +19,8 @@
     <div class="orb" id="orb" data-state="idle" data-voice="silent" data-size="normal">
       <div class="orb-hit" id="orbHit" title="点击停止 · 右键打开菜单 · 拖动可移动位置">
         <canvas class="orb__canvas" id="orbCanvas"></canvas>
+        <!-- v10（2026-05-12）：紧凑模式专用的纯色科技感小球；normal 模式下 CSS 隐藏 -->
+        <div class="orb__dot" id="orbDot" aria-hidden="true"></div>
         <div class="orb__ring"></div>
         <div class="orb__spinner"></div>
       </div>

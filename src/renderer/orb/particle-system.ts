@@ -233,6 +233,8 @@ export class ParticleSystem {
   private mounted = false
   /** 暂停（window 隐藏/不可见） */
   private paused = false
+  /** 外部主动要求暂停（如 v10：compact 模式下改用纯色 CSS 球，粒子不需要跑） */
+  private externallyPaused = false
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -314,6 +316,19 @@ export class ParticleSystem {
     this.camera.updateProjectionMatrix()
     if (this.material) {
       this.material.uniforms['uPixelScale']!.value = h * 0.18
+    }
+  }
+
+  /**
+   * 外部主动控制是否暂停（v10 · 2026-05-12）
+   * compact 模式下我们改用纯色 CSS 小球（.orb__dot），不再需要粒子，
+   * 此时渲染端会调用 setExternalPause(true) 让 WebGL 停止出帧，省电省 GPU。
+   */
+  setExternalPause(paused: boolean): void {
+    this.externallyPaused = paused
+    if (!paused) {
+      // 恢复时重置 lastFrameTime，避免累积的 delta 让第一帧跳变
+      this.lastFrameTime = performance.now() - 1000
     }
   }
 
@@ -524,6 +539,7 @@ export class ParticleSystem {
     this.rafHandle = requestAnimationFrame(this.loop)
 
     if (this.paused) return
+    if (this.externallyPaused) return
 
     const now = performance.now()
     const targetInterval = 1000 / this.tier.fps

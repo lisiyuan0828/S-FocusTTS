@@ -87,6 +87,9 @@ function applySize(size: OrbSizeType): void {
   if (size === 'compact') {
     hintEl.hidden = true
   }
+  // v10（2026-05-12）：compact 模式改用纯色 CSS 小球，粒子系统暂停省电；
+  //                    normal 模式恢复粒子渲染。
+  particles.setExternalPause(size === 'compact')
   // 尺寸变后给粒子 canvas 一帧时间重新 layout，再 resize + 切档
   requestAnimationFrame(() => {
     particles.resize()
