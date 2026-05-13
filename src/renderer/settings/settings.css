@@ -128,14 +128,7 @@ code {
   box-shadow: 0 0 12px rgba(125, 240, 211, 0.35);
   position: relative;
 }
-.brand__logo::after {
-  /* 占位：待用户传真实 icon；这里用对角亮线做占位质感 */
-  content: '';
-  position: absolute;
-  inset: 6px;
-  border-radius: 4px;
-  background: linear-gradient(45deg, rgba(255, 255, 255, 0.25), transparent 60%);
-}
+/* .brand__logo::after 的真实 emoji 渲染在文件末尾"图标库"中统一定义 */
 .brand__text {
   display: inline-flex;
   flex-direction: column;
@@ -333,15 +326,7 @@ code {
   color: var(--accent);
   box-shadow: inset 0 0 0 1px rgba(125, 240, 211, 0.35);
 }
-.group__icon::after {
-  /* 图标占位的内凹装饰（等真实 icon 就去掉） */
-  content: '';
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  background: currentColor;
-  opacity: 0.35;
-}
+/* 真实图标已通过 .icon-slot--xxx 的 mask-image 渲染，::after 占位装饰移除 */
 
 .group__text {
   display: flex;
@@ -454,9 +439,7 @@ code {
   width: 14px;
   height: 14px;
   color: var(--accent);
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.9;
+  /* 背景/圆形交给 .icon-slot--check 的 mask 实现真正的勾形 */
 }
 
 /* ============ 真 select（注入模式沿用） ============ */
@@ -671,14 +654,7 @@ select:focus {
   color: var(--accent);
   box-shadow: inset 0 0 0 1px rgba(125, 240, 211, 0.35);
 }
-.duo__icon::after {
-  content: '';
-  width: 14px;
-  height: 14px;
-  background: currentColor;
-  border-radius: 3px;
-  opacity: 0.4;
-}
+/* 真实图标已通过 .icon-slot--xxx 的 mask-image 渲染，::after 占位装饰移除 */
 .duo__title {
   margin: 0;
   font-size: 15px;
@@ -738,17 +714,14 @@ select:focus {
   box-shadow: inset 0 0 0 1px rgba(125, 240, 211, 0.2);
 }
 .lang-list__check {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 1px solid var(--line-strong);
-  background: transparent;
+  width: 16px;
+  height: 16px;
+  /* 未选中：block 位置占位但不显示勾（transparent 在 background-color: currentColor 下会隐藏 mask）*/
   color: transparent;
 }
 .lang-list__item[aria-checked='true'] .lang-list__check {
-  background: var(--accent);
+  /* 选中：勾形青绿色呈现（mask 已提供勾形 path）*/
   color: var(--accent);
-  border-color: var(--accent);
 }
 
 /* ============ 键值对 kv ============ */
@@ -958,6 +931,153 @@ select:focus {
 /* 错误调用：红色变体（复用同一个 toast 入口）*/
 .save-hint[data-tone='error'] {
   color: var(--danger);
+}
+
+/* ============================================================
+   图标库（emoji 方案）
+   说明：mask-image SVG 在当前 Electron 渲染器中无法显示，
+         改用 ::after content 直接渲染 emoji，最稳妥。
+   ============================================================ */
+
+/* —— 容器型槽位本身禁用基类 mask，并还原各自的彩色背景 —— */
+.brand__logo.icon-slot,
+.group__icon.icon-slot,
+.duo__icon.icon-slot,
+.item__preview.icon-slot {
+  -webkit-mask-image: none !important;
+          mask-image: none !important;
+}
+.brand__logo.icon-slot {
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent));
+}
+.group:nth-of-type(1) .group__icon.icon-slot { background: var(--accent-purple-dim); }
+.group:nth-of-type(2) .group__icon.icon-slot { background: rgba(255, 159, 198, 0.16); }
+.group:nth-of-type(3) .group__icon.icon-slot { background: var(--accent-dim); }
+.group--diag .group__icon.icon-slot,
+#permSection .group__icon.icon-slot { background: var(--accent-dim); }
+.duo__cell:nth-of-type(1) .duo__icon.icon-slot,
+.duo__cell:nth-of-type(2) .duo__icon.icon-slot { background: var(--accent-dim); }
+.item__preview.icon-slot {
+  background: radial-gradient(circle at 35% 35%, #1b6a7a, #0b2230 70%);
+  position: relative;
+}
+.group:nth-of-type(2) .item__preview.icon-slot {
+  background: radial-gradient(circle at 35% 35%, #2a8a7d, #0a2822 70%);
+}
+.group:nth-of-type(3) .item__preview.icon-slot {
+  background: linear-gradient(135deg, #2a2450, #1a1732);
+}
+
+/* —— 容器型 ::after 公共样式（emoji 居中渲染） —— */
+.group__icon::after,
+.duo__icon::after,
+.item__preview.icon-slot::after,
+.brand__logo::after {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  text-align: center;
+  line-height: 1;
+  /* 关键：emoji 默认会被 background-color: currentColor 影响导致变色，
+     所以容器型槽位的 ::after 不能继承 .icon-slot 的样式 —— 这里不设
+     background-color，让 emoji 保持彩色。 */
+}
+
+.brand__logo::after {
+  content: '⚡';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  /* 重置之前的 mask 写法 */
+  background: none;
+  -webkit-mask: none;
+          mask: none;
+  opacity: 1;
+}
+
+.group__icon::after {
+  display: inline-block;
+  font-size: 22px;
+  /* 让 group__icon (inline-flex + center) 自动居中 emoji */
+  background: none;
+  -webkit-mask: none;
+          mask: none;
+}
+
+.duo__icon::after {
+  display: inline-block;
+  font-size: 18px;
+  background: none;
+  -webkit-mask: none;
+          mask: none;
+}
+
+.item__preview.icon-slot::after {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: none;
+  -webkit-mask: none;
+          mask: none;
+}
+
+/* —— 各 emoji 图标 —— */
+.icon-slot--mic::after     { content: '🎙️'; }
+.icon-slot--palette::after { content: '🎨'; }
+.icon-slot--cmd::after     { content: '⌨️'; }
+.icon-slot--model::after   { content: '🌐'; }
+.icon-slot--rocket::after  { content: '🚀'; }
+.icon-slot--shield::after  { content: '🛡️'; }
+.icon-slot--info::after    { content: 'ℹ️'; }
+.icon-slot--orb::after     { content: '🔵'; }
+.icon-slot--chip::after    { content: '🔌'; }
+
+/* —— 纯图标槽位（勾选 / 下拉箭头）保留 mask-image SVG 方案，
+       因为这些位置太小（10~16px），用 emoji 容易糊。
+       不行的话再降级到字符。 —— */
+
+/* 勾选：用 ✓ 字符（Unicode），最稳 */
+.icon-slot--check {
+  -webkit-mask-image: none;
+          mask-image: none;
+  background: none;
+  opacity: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: currentColor;
+  line-height: 1;
+}
+.icon-slot--check::before {
+  content: '✓';
+}
+
+/* 下拉箭头：用 ▾ 字符 */
+.icon-slot--chev {
+  -webkit-mask-image: none;
+          mask-image: none;
+  background: none;
+  clip-path: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: currentColor;
+  line-height: 1;
+  width: auto;
+  height: auto;
+  opacity: 0.85;
+}
+.icon-slot--chev::before {
+  content: '▾';
 }
 
 /* ============ 响应式（窄屏折叠） ============ */
