@@ -54,11 +54,21 @@ const canvasEl = document.getElementById('orbCanvas') as HTMLCanvasElement
 // 当前缓存：state / voiceActive / size —— 任一变更都要回传给粒子
 let curState: OrbStateType = 'idle'
 let curVoice = false
-let curSize: OrbSizeType = 'normal'
+// 关键：从 DOM 读取由 inline script 注入的初始 size（来自 URL query），
+// 这样粒子系统启动时就用对档位，避免 normal→compact 闪烁。
+const initialSizeAttr = orbEl.getAttribute('data-size')
+let curSize: OrbSizeType =
+  initialSizeAttr === 'compact' ? 'compact' : 'normal'
 
 const particles = new ParticleSystem(canvasEl)
 particles.mount()
 particles.setTarget(curState, curVoice, curSize)
+// compact 模式下粒子直接外部暂停（与 applySize 内逻辑一致），省电同时避免
+// 启动瞬间粒子先跑一帧再被 pause 的视觉抖动
+if (curSize === 'compact') {
+  particles.setExternalPause(true)
+  hintEl.hidden = true
+}
 
 // 窗口/球尺寸变化时让粒子 canvas 同步
 const resizeObserver = new ResizeObserver(() => particles.resize())

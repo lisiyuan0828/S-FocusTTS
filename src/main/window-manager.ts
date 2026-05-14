@@ -97,10 +97,15 @@ export class WindowManager {
     win.setIgnoreMouseEvents(false)
 
     // 加载 renderer（dev vs prod）
+    // 把当前 orb size 作为 query 传过去，让 renderer 在脚本最早期立刻把
+    // <div id="orb"> 的 data-size 设成对的值，避免"先 normal 后 compact"闪烁
+    const sizeQuery = `?size=${this.lastOrbSize}`
     if (process.env['ELECTRON_RENDERER_URL']) {
-      win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/orb/index.html`)
+      win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/orb/index.html${sizeQuery}`)
     } else {
-      win.loadFile(path.join(__dirname, '../renderer/orb/index.html'))
+      win.loadFile(path.join(__dirname, '../renderer/orb/index.html'), {
+        search: sizeQuery.slice(1)
+      })
     }
 
     // 窗口 webContents 每次加载完成后，补推最新状态（防止首帧 idle 被覆盖）

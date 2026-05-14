@@ -9,14 +9,41 @@
     />
     <title>S-FocusTTS Orb</title>
     <link rel="stylesheet" href="./orb.css" />
+    <!--
+      关键：在 CSS 还没解析、orb.ts 还没下载执行之前，就把根节点的 data-size
+      根据 URL query (?size=normal|compact) 设好，避免先按 normal 渲一帧再切到
+      compact 的可见闪烁（启动时尤其明显）。
+    -->
+    <script>
+      ;(function () {
+        try {
+          var p = new URLSearchParams(location.search)
+          var s = p.get('size')
+          if (s !== 'normal' && s !== 'compact') s = 'normal'
+          // 暂存到全局，orb.ts 启动时会读它做初始同步
+          window.__ORB_INITIAL_SIZE__ = s
+          // 用一段早期 inline CSS 让 <html> 也能匹配，便于在 head 阶段就生效
+          document.documentElement.setAttribute('data-orb-size', s)
+        } catch (_) {
+          window.__ORB_INITIAL_SIZE__ = 'normal'
+        }
+      })()
+    </script>
   </head>
   <body>
     <!--
       .orb-hit 才是鼠标可点击的真正命中区（圆形按钮）
       外层 body/.orb 保持透明且穿透，只有球本体接收点击事件
       这样既能保证"左键停止/右键菜单"生效，又让窗口其余区域完全透明不阻挡
+      data-size 不再硬编码，由下方 inline script 根据 URL query 在 DOMContentLoaded 之前注入
     -->
-    <div class="orb" id="orb" data-state="idle" data-voice="silent" data-size="normal">
+    <div class="orb" id="orb" data-state="idle" data-voice="silent">
+      <script>
+        ;(function () {
+          var orb = document.getElementById('orb')
+          if (orb) orb.setAttribute('data-size', window.__ORB_INITIAL_SIZE__ || 'normal')
+        })()
+      </script>
       <div class="orb-hit" id="orbHit" title="点击停止 · 右键打开菜单 · 拖动可移动位置">
         <canvas class="orb__canvas" id="orbCanvas"></canvas>
         <!-- v10（2026-05-12）：紧凑模式专用的纯色科技感小球；normal 模式下 CSS 隐藏 -->
